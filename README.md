@@ -1,0 +1,177 @@
+# Garmin Trainer
+
+Garmin Trainer udostępnia dane z Garmin Connect agentowi AI poprzez GarminDB i serwer MCP.
+
+Projekt składa się z trzech elementów:
+
+- **GarminDB** – pobieranie i przechowywanie danych Garmin Connect,
+- **GarminDB MCP** – udostępnianie danych GarminDB przez MCP,
+- **Open WebUI** – interfejs dla agenta Garmin Trainer.
+
+## Struktura
+
+```text
+garmin-trainer/
+├── docker-compose.yml
+├── README.md
+├── garmindb/
+├── garmindb-mcp/
+└── openwebui/
+```
+
+Całość uruchamiana jest jednym Docker Compose.
+
+## Instalacja
+
+```bash
+git clone <ADRES_REPO>
+cd garmin-trainer
+```
+
+### Konfiguracja Garmin Connect
+
+Utwórz katalog konfiguracji:
+```bash
+mkdir -p garmindb/garmin_data
+```
+
+Skopiuj przykładowy plik:
+```bash
+cp garmindb/GarminConnectConfig.json.example \
+   garmindb/garmin_data/GarminConnectConfig.json
+```
+
+Edytuj:
+```bash
+nano garmindb/garmin_data/GarminConnectConfig.json
+```
+
+Wpisz dane logowania do Garmin Connect oraz ustaw daty, od których GarminDB ma pobrać historię.
+
+Domyślnie pobieranych jest 25 ostatnich aktywności. Zakres historii oraz pozostałe opcje pobierania można zmienić w `garmindb/garmin_data/GarminConnectConfig.json` zgodnie z [dokumentacją GarminDB](https://github.com/tcgoetz/GarminDB).
+
+Pełny przykład konfiguracji GarminDB:
+
+https://github.com/tcgoetz/GarminDB/blob/master/garmindb/GarminConnectConfig.json.example
+
+## Pierwsze uruchomienie
+
+Zbuduj i uruchom projekt:
+```bash
+docker compose up -d --build
+```
+
+Przy pierwszym uruchomieniu GarminDB może przez kilka minut pobierać i analizować dane.
+
+Możesz poczekać na zakończenie synchronizacji:
+```bash
+docker compose wait garmindb
+```
+
+Następnie sprawdź jej wynik:
+```bash
+docker compose ps -a garmindb
+```
+
+Poprawne zakończenie wygląda tak:
+```text
+Exited (0)
+```
+
+W razie potrzeby postęp synchronizacji można obserwować:
+```bash
+docker compose logs -f garmindb
+```
+
+Open WebUI:
+```text
+http://<IP_SERWERA>:3000
+```
+
+GarminDB MCP:
+```text
+http://<IP_SERWERA>:8000/mcp
+```
+
+## Open WebUI
+
+Po pierwszym uruchomieniu skonfiguruj używany model/API.
+
+Serwer MCP dodaj jako:
+```text
+Name: garmindb-mcp
+URL: http://garmindb-mcp:8000/mcp
+```
+
+Gotową konfigurację Tool Server można również zaimportować z:
+```text
+openwebui/garmindb-mcp-tool-server-100
+```
+
+Gotowego agenta Garmin Trainer można zaimportować z:
+```text
+openwebui/garmin-trainer.json
+```
+
+Po imporcie sprawdź, czy Agent ma przypisany serwer `garmindb-mcp`.
+
+## Aktualizacja danych
+
+Ręczne pobranie najnowszych danych:
+```bash
+docker compose run --rm garmindb
+```
+
+Synchronizacja działa w terminalu i po zakończeniu zwraca kontrolę użytkownikowi.
+
+Serwer MCP i Open WebUI działają niezależnie od procesu synchronizacji.
+
+## GarminDB
+
+Projekt korzysta obecnie z **GarminDB 3.9.0**.
+
+Podczas budowania obrazu oficjalne repozytorium GarminDB jest klonowane automatycznie.
+
+Projekt stosuje lokalny patch:
+```text
+garmindb/patches/garmindb-today.patch
+```
+
+Patch bazuje na GarminDB PR #318 i naprawia zakres `--latest`, tak aby pobierany był również bieżący dzień.
+
+Jest to istotne m.in. dla aktualnych danych snu, HRV i regeneracji.
+
+Jeżeli poprawka zostanie w przyszłości włączona do GarminDB, patch oraz krok jego aplikowania można usunąć z:
+
+```text
+garmindb/Dockerfile
+```
+
+Oficjalne repozytorium: https://github.com/tcgoetz/GarminDB
+
+## Podstawowe komendy
+
+Uruchomienie:
+```bash
+docker compose up -d
+```
+
+Status:
+```bash
+docker compose ps
+```
+
+Logi:
+```bash
+docker compose logs -f
+```
+
+Synchronizacja Garmin:
+```bash
+docker compose run --rm garmindb
+```
+
+Zatrzymanie:
+```bash
+docker compose down
+```

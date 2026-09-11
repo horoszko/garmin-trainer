@@ -1,0 +1,46 @@
+From 9f2df1359a3827581db976edcbe6ee84252557b4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ricardo=20Leit=C3=A3o?= <dev.turmoil370@passfwd.com>
+Date: Wed, 27 May 2026 23:08:25 +0200
+Subject: [PATCH] Fix off-by-one preventing download of today's data (#264)
+
+The download date range always stopped at yesterday, so checking
+today's sleep or stats required waiting until the next day.
+
+range(0, (today - date).days) excluded today because both range()
+and timedelta.days are end-exclusive. Adding + 1 to the three
+date-delta calculations makes the date range inclusive of today.
+---
+ garmindb/garmin_connect_config_manager.py | 2 +-
+ scripts/garmindb_cli.py                   | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/garmindb/garmin_connect_config_manager.py b/garmindb/garmin_connect_config_manager.py
+index 41695fbc..f0ad6abc 100644
+--- a/garmindb/garmin_connect_config_manager.py
++++ b/garmindb/garmin_connect_config_manager.py
+@@ -221,7 +221,7 @@ def stat_start_date(self, stat_type):
+             # If still nothing, default to 20 days ago
+             start_date = datetime.datetime.now().date() - datetime.timedelta(days=20)
+         end_date = self.get_node_value_default('data', stat_type + '_end_date', datetime.datetime.now().date())
+-        days = (end_date - start_date).days
++        days = (end_date - start_date).days + 1
+         return (start_date, days)
+ 
+     def device_mount_dir(self):
+diff --git a/scripts/garmindb_cli.py b/scripts/garmindb_cli.py
+index e796e29d..87be705d 100755
+--- a/scripts/garmindb_cli.py
++++ b/scripts/garmindb_cli.py
+@@ -71,10 +71,10 @@ def __get_date_and_days(self, db, latest, table, col, stat_name):
+                 logger.info("Downloading latest %s data from: %s", stat_name, last_ts)
+                 last_ts_date_date = last_ts.date() if isinstance(last_ts, datetime.datetime) else last_ts
+                 date = last_ts_date_date - datetime.timedelta(days=1)
+-                days = (datetime.date.today() - date).days
++                days = (datetime.date.today() - date).days + 1
+         else:
+             date, days = self.gc_config.stat_start_date(stat_name)
+-            days = min((datetime.date.today() - date).days, days)
++            days = min((datetime.date.today() - date).days + 1, days)
+             logger.info("Downloading all %s data from: %s [%d]", stat_name, date, days)
+         if date is None or days is None:
+             logger.error("Missing config: need %s_start_date and download_days. Edit GarminConnectConfig.py.", stat_name)

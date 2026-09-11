@@ -1,0 +1,1 @@
+[{"type":"mcp","url":"http://garmindb-mcp:8000/mcp","spec_type":"url","spec":"","path":"openapi.json","auth_type":"none","key":"","info":{"id":"100","name":"garmindb-mcp","description":"MCP server providing GarminDB health, training and activity data to AI agents."}}]

@@ -1,0 +1,42 @@
+services:
+
+  garmindb:
+    build:
+      context: ./garmindb
+    container_name: garmindb
+    restart: "no"
+    environment:
+      - TZ=Europe/Warsaw
+    volumes:
+      - ./garmindb/garmin_data:/root/.GarminDb
+      - ./garmindb/health_data:/root/HealthData
+    command: >
+      garmindb_cli.py
+      --all
+      --download
+      --import
+      --analyze
+      --latest
+
+  garmindb-mcp:
+    build:
+      context: ./garmindb-mcp
+    container_name: garmindb-mcp
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Warsaw
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./garmindb/health_data:/data:ro
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: openwebui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      - TZ=Europe/Warsaw
+    volumes:
+      - ./openwebui/data:/app/backend/data
