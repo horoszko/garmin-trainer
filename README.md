@@ -76,7 +76,7 @@ http://<IP_SERWERA>:8000/mcp
 
 ## Open WebUI
 
-Przy pierwszym uruchomieniu skonfiguruj używany model/API :
+Przy pierwszym uruchomieniu skonfiguruj używany połączenie API :
 ```text
 Ikona Avatar > Ustawienia > Administrator | AI | Połączenia
 ```
@@ -101,10 +101,14 @@ Po imporcie sprawdź, czy Agent ma przypisany serwer MCP w sekcji :
 ```text
 Narzędzia | Wybierz narzędzie : garmindb-mcp
 ```
+UWAGA : Narzędzia MCP wymagają modelu LLM obsługującego wywoływanie narzędzi (tool/function calling). Dobrze sprawdzają się m.in. modele GPT oraz Qwen z obsługą narzędzi.
+
+UWAGA : Dla modeli lokalnych Ollama warto dostosować num_ctx do dostępnej pamięci VRAM. Przy korzystaniu z zewnętrznych dostawców modeli zalecane jest pozostawienie domyślnych ustawień kontekstu - ręczne wymuszanie `num_ctx` może być nieobsługiwane przez API i powodować błędy.
+
 Zapisz i zrób prosty test zapytaj Agenta :
 
 ```text
-Jaki był mój ostatni trening
+Jaki był mój ostatni trening?
 ```
 
 ## Synchronizacja bazy danych z Garmin Connect
@@ -140,3 +144,17 @@ garmindb/Dockerfile
 ```
 
 Oficjalne repozytorium: https://github.com/tcgoetz/GarminDB
+
+## Narzędzia MCP
+
+Garmin Trainer udostępnia modelowi AI następujące narzędzia:
+
+- `get_activities` – pobiera listę aktywności z wybranego okresu, opcjonalnie ograniczoną do konkretnego sportu. Pozwala analizować historię treningów i porównywać aktywności.
+- `get_sport_types` – zwraca rodzaje aktywności dostępne w GarminDB i pomaga modelowi dobrać właściwy filtr sportu.
+- `get_sport_summary` – tworzy podsumowanie wybranego sportu w zadanym okresie, m.in. liczbę aktywności, dystans, czas i podstawowe statystyki.
+- `get_latest_activity` – zwraca ostatnią aktywność użytkownika lub ostatnią aktywność konkretnego typu wraz z jej podstawowymi parametrami.
+- `get_activity_details` – pobiera szczegółowe dane pojedynczego treningu, m.in. lapy, tempo, tętno, kadencję oraz dostępne dane szczegółowe aktywności.
+- `get_daily_activity_summary` – grupuje aktywności dzień po dniu w wybranym okresie, ułatwiając analizę regularności i struktury treningów.
+- `get_recovery_metrics` – pobiera dane dotyczące regeneracji, m.in. HRV, sen, tętno spoczynkowe, stres i Body Battery.
+- `get_training_load_summary` – analizuje obciążenie treningowe tydzień po tygodniu, umożliwiając ocenę zmian objętości i intensywności treningów.
+- `get_readiness_summary` – łączy najważniejsze dane treningowe i regeneracyjne potrzebne do oceny aktualnej gotowości do treningu.
