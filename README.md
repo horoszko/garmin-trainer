@@ -6,7 +6,9 @@ Projekt działa w Dockerze i jest pomyślany tak, żeby dało się go łatwo uru
 
 UWAGA: Obecny model wdrożenia: jedna instancja Garmin Trainer = jeden użytkownik GarminDB. 
 Obsługa kolejnego użytkownika wymaga uruchomienia osobnej instancji kontenera z oddzielnym data/.
-UWAGA: Agent nie ma dostępu do wyszukiwania WWW. Korzysta wyłącznie z danych GarminDB, Training Diary oraz źródeł wiedzy umieszczonych w data/knowledge/.
+
+UWAGA: Agent celowo nie ma dostępu do wyszukiwarki internetowej. Korzysta wyłącznie z danych GarminDB, Training Diary oraz źródeł wiedzy umieszczonych w data/knowledge/.
+
 UWAGA: "Garmin Trainer" może być również wykorzystywany przez inne agenty i automatyzacje przez API Open WebUI. Rdzeń aplikacji jest napisany w Pythonie i pozostaje niezależny od warstwy interfejsu, więc Open WebUI można w przyszłości zastąpić innym frontendem, frameworkiem agentowym lub własnym adapterem API bez przepisywania głównej logiki aplikacji.
 
 ## Co potrafi
