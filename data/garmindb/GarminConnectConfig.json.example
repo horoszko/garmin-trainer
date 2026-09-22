@@ -1,0 +1,18 @@
+{
+  "credentials": {
+    "user": "GARMIN_CONNECT_USER",
+    "secure_password": false,
+    "password": "CHANGE_ME",
+    "password_file": null
+  },
+
+  "data": {
+    "weight_start_date": "MM/DD/YYYY",
+    "sleep_start_date": "MM/DD/YYYY",
+    "rhr_start_date": "MM/DD/YYYY",
+    "hrv_start_date": "MM/DD/YYYY",
+    "monitoring_start_date": "MM/DD/YYYY",
+    "download_latest_activities": 25,
+    "download_all_activities": 1000
+  }
+}

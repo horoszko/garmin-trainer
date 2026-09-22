@@ -1,0 +1,11 @@
+{
+  "id": "fit_files_tools",
+  "name": "FIT Files Tools",
+  "content": "\"\"\"\ntitle: FIT Files Tools\ndescription: Garmin Trainer workout FIT generation.\nversion: 0.1.0\n\"\"\"\n\nimport asyncio\nimport sys\n\nsys.path.insert(0, \"/opt/garmin-trainer/app\")\n\nimport tools_fit as backend\nfrom workspace_tools_files import attach_workspace_file\n\n\nclass Tools:\n    async def create_running_workout(\n        self,\n        name: str,\n        warmup_seconds: int,\n        interval_seconds: int,\n        recovery_seconds: int,\n        repetitions: int,\n        cooldown_seconds: int,\n        pace_min: str = \"\",\n        pace_max: str = \"\",\n        __user__: dict = None,\n        __request__=None,\n        __event_emitter__=None,\n    ):\n        \"\"\"\n        Tworzy plik FIT z treningiem biegowym i dołącza go do rozmowy.\n\n        Obsługiwany schemat:\n        - rozgrzewka\n        - interwał\n        - regeneracja\n        - powtórzenia\n        - schłodzenie\n\n        pace_min i pace_max podawaj jako MM:SS min/km.\n        \"\"\"\n        result = await asyncio.to_thread(\n            backend.create_running_workout,\n            name=name,\n            warmup_seconds=warmup_seconds,\n            interval_seconds=interval_seconds,\n            recovery_seconds=recovery_seconds,\n            repetitions=repetitions,\n            cooldown_seconds=cooldown_seconds,\n            pace_min=pace_min,\n            pace_max=pace_max,\n        )\n\n        if not result.get(\"success\"):\n            return result\n\n        attachment = await attach_workspace_file(\n            file_path=backend.GENERATED_DIR / result[\"filename\"],\n            allowed_root=backend.GENERATED_DIR,\n            user_context=__user__,\n            request=__request__,\n            event_emitter=__event_emitter__,\n            content_type=\"application/octet-stream\",\n        )\n\n        return {\n            **result,\n            \"attached\": True,\n            \"attachment\": attachment,\n        }\n\n",
+  "meta": {
+    "description": "FIT Files Tools",
+    "manifest": {},
+    "has_user_valves": false
+  },
+  "access_grants": []
+}

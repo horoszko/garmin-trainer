@@ -1,0 +1,61 @@
+# Secrets and local configuration
+.env
+*.env
+!.env.example
+**/.env
+
+# Open WebUI runtime data
+openwebui-data/
+openwebui/data/
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# GarminDB private/runtime data
+data/garmindb/*
+!data/garmindb/.gitkeep
+!data/garmindb/GarminConnectConfig.json.example
+*.fit
+
+# Private/local Training Diary data
+data/training_diary/*
+!data/training_diary/.gitkeep
+
+# Generated files
+data/generated/*
+!data/generated/.gitkeep
+
+# Local knowledge directories
+data/knowledge/*
+!data/knowledge/.gitkeep
+
+# Project roadmap is intentionally local for now
+ROADMAP.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Test and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Logs and temporary files
+*.log
+*.backup
+*.bak
+*.tmp
+*~
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
