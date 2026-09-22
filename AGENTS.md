@@ -155,6 +155,25 @@ jest wyłącznie `data/garmindb/GarminConnectConfig.json.example`.
 GarminDB korzysta z katalogu `data/garmindb/`. Nie twórz ani nie używaj
 `data/garmindb/garmin_data/` jako katalogu konfiguracyjnego projektu.
 
+`data/garmindb/` jest trwałym katalogiem danych użytkownika na hoście. W
+kontenerze jest montowany jako `/data/garmindb`, a zmienna `HOME` procesu
+GarminDB musi wskazywać `/data/garmindb`. GarminDB tworzy wtedy dane pod:
+
+```text
+/data/garmindb/HealthData/
+```
+
+Na hoście odpowiada to:
+
+```text
+/opt/garmin-trainer/data/garmindb/HealthData/
+```
+
+Oczekiwane bazy to `HealthData/DBs/garmin.db` oraz
+`HealthData/DBs/garmin_activities.db`. Nie kieruj GarminDB do `/root/HealthData`
+ani do `data/garmindb/garmin_data/`. Cały katalog `data/garmindb/` powinien być
+łatwy do ręcznego backupu i przeniesienia razem z projektem.
+
 Po uruchomieniu Open WebUI jest dostępne pod portem `3000`. Bootstrap musi
 zakończyć się sukcesem; w przeciwnym razie entrypoint zatrzymuje kontener.
 
@@ -421,6 +440,12 @@ FIT. Adapter odpowiada za jego natywne załączenie w rozmowie.
 ```bash
 garmindb_cli.py -f /data/garmindb --all --download --import --analyze
 ```
+
+Sama opcja `-f` nie gwarantuje lokalizacji `HealthData`; GarminDB używa także
+katalogu domowego procesu. Adapter wymusza `HOME=/data/garmindb` zarówno w
+Compose, jak i w środowisku procesu synchronizacji. Po zakończeniu synchronizacji
+adapter musi potwierdzić istnienie obu oczekiwanych baz. Kod wyjścia `0` bez baz
+nie może być przedstawiony użytkownikowi jako udana synchronizacja.
 
 Tryb `auto` ma oznaczać `latest`. Pełna synchronizacja jest dozwolona tylko po
 wyraźnym żądaniu użytkownika i nie może być uruchamiana automatycznie ani

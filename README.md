@@ -82,6 +82,25 @@ cp data/garmindb/GarminConnectConfig.json.example data/garmindb/GarminConnectCon
 
 Format konfiguracji opisuje projekt [GarminDB](https://github.com/elbart/garmindb).
 
+GarminDB przechowuje dane użytkownika w katalogu projektu:
+
+```text
+/opt/garmin-trainer/data/garmindb/
+```
+
+W kontenerze ten sam katalog jest dostępny jako `/data/garmindb`. Zmienna
+`HOME` kontenera jest ustawiona na `/data/garmindb`, ponieważ GarminDB tworzy
+`HealthData/` względem katalogu domowego procesu. Oczekiwana lokalizacja baz to:
+
+```text
+data/garmindb/HealthData/DBs/garmin.db
+data/garmindb/HealthData/DBs/garmin_activities.db
+```
+
+Nie używaj `/root/HealthData` ani `data/garmindb/garmin_data/`. Dane w
+`data/garmindb/` są lokalnymi danymi użytkownika, pozostają poza repozytorium i
+mogą być ręcznie kopiowane oraz przenoszone razem z instalacją.
+
 ### 4. Uruchom projekt
 
 ```bash
@@ -384,6 +403,12 @@ data/knowledge/       # źródła Knowledge zarządzane przez projekt
 
 Przy tworzeniu kopii zapasowej warto zabezpieczyć zarówno `data/`, jak i wolumen Open WebUI.
 
+Minimalna kopia danych Garmin Trainer powinna obejmować cały katalog
+`data/garmindb/`, w szczególności `HealthData/`, obie bazy SQLite, pliki FIT,
+sesję GarminDB oraz `GarminConnectConfig.json`. Plik konfiguracyjny zawiera
+sekrety i powinien być przechowywany z ograniczonymi uprawnieniami; nie wolno
+go commitować.
+
 ## Bootstrap i konfiguracja Open WebUI
 
 Konfiguracje Tools i Custom Models są zapisane w repozytorium jako czytelne pliki:
@@ -410,6 +435,10 @@ Po świeżej instalacji warto sprawdzić:
 7. czy `/sync full` można zatrzymać przez `/sync stop`.
 
 Pełnej synchronizacji GarminDB nie uruchamiaj wyłącznie po to, żeby sprawdzić, czy przycisk działa — może potrwać kilka godzin.
+
+Synchronizacja jest uznana za udaną dopiero wtedy, gdy GarminDB zakończy się
+kodem `0` oraz utworzone są obie oczekiwane bazy w
+`data/garmindb/HealthData/DBs/`. Sam kod wyjścia procesu nie wystarcza.
 
 ## Możliwe, przykładowe kierunki rozwoju aplikacji
 - obsługa wielu użytkowników i niezależnych profili GarminDB w jednej instancji aplikacji

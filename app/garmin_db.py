@@ -2218,6 +2218,8 @@ def sync_garmindb(
             "w",
             encoding="utf-8",
         )
+        process_env = os.environ.copy()
+        process_env["HOME"] = str(GARMINDB_DIR)
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
@@ -2225,6 +2227,7 @@ def sync_garmindb(
             text=True,
             bufsize=1,
             start_new_session=True,
+            env=process_env,
         )
     except OSError as exc:
         if log_file is not None:
@@ -2303,6 +2306,47 @@ def sync_garmindb(
         "log_path": str(log_path),
         "output_tail": tail,
     }
+
+    database_paths = [
+        Path(GARMIN_DB),
+        Path(GARMIN_ACTIVITIES_DB),
+    ]
+    missing_databases = [
+        str(path)
+        for path in database_paths
+        if not path.is_file()
+    ]
+    result["database_paths"] = [str(path) for path in database_paths]
+    result["missing_databases"] = missing_databases
+
+    if returncode == 0 and missing_databases:
+        result.update(
+            {
+                "success": False,
+                "status": "failed",
+                "error": (
+                    "GarminDB zakończył proces poprawnie, ale nie utworzył "
+                    "oczekiwanych baz danych. Sprawdź konfigurację HOME "
+                    "i ścieżkę danych GarminDB."
+                ),
+            }
+        )
+        _write_sync_state(
+            {
+                "status": "failed",
+                "mode": selected,
+                "started_at": started.isoformat(),
+                "finished_at": finished.isoformat(),
+                "returncode": returncode,
+                "error": result["error"],
+                "missing_databases": missing_databases,
+                "log_path": str(log_path),
+                "output_tail": tail,
+            }
+        )
+        if progress_callback:
+            progress_callback("Synchronizacja zakończona błędem: brak baz danych")
+        return result
 
     if interrupted:
         result.update(
