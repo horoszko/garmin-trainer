@@ -65,9 +65,9 @@ cp .env.example .env
 Minimalnie ustaw konto administratora Open WebUI:
 
 ```text
-WEBUI_ADMIN_EMAIL=admin@example.com
-WEBUI_ADMIN_PASSWORD=CHANGE_ME
-WEBUI_ADMIN_NAME=Administrator
+WEBUI_ADMIN_EMAIL="admin@example.com"
+WEBUI_ADMIN_PASSWORD="CHANGE_ME"
+WEBUI_ADMIN_NAME="Administrator"
 ```
 
 Nie zapisuj w repozytorium haseł, tokenów, plików sesji ani prywatnych danych treningowych.

@@ -257,7 +257,12 @@ def sync_knowledge_sources(token: str) -> list[dict]:
         raise RuntimeError(f"Brak katalogu Knowledge: {KNOWLEDGE_DIR}")
     source_dirs = sorted(path for path in KNOWLEDGE_DIR.iterdir() if path.is_dir())
     if not source_dirs:
-        raise RuntimeError(f"Brak źródeł Knowledge w {KNOWLEDGE_DIR}")
+        print(
+            "Ostrzeżenie: brak źródeł Knowledge w "
+            f"{KNOWLEDGE_DIR}; można je dodać później przez GUI Open WebUI.",
+            file=sys.stderr,
+        )
+        return []
 
     response = request_json("GET", "/api/v1/knowledge/?page=1", token=token) or {}
     items = response.get("items", []) if isinstance(response, dict) else []
