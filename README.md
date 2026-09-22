@@ -188,6 +188,20 @@ Dziennik może zawierać między innymi:
 - kontekst potrzebny przy kolejnych rozmowach;
 - wnioski trenera.
 
+W tygodniowym Diary sekcje mają stały podział odpowiedzialności:
+
+- `Profil zawodnika` — imię, data urodzenia, masa ciała i płeć; brakujące dane pozostają `null`;
+- `Context` — krótki aktualny obraz tygodnia dla LLM;
+- `Stan tygodnia` — status, liczniki jednostek i bieżąca decyzja;
+- `Ustalenia` — trwałe cele, ograniczenia, preferencje i limity;
+- `Plan tygodnia` — planowane jednostki;
+- `Ocena jednostek` — szczegóły wykonania;
+- `Trend` — porównania i trendy;
+- `Notatki trenera` — bieżące obserwacje, samopoczucie, uzasadnienia i następne kontrole.
+
+Nie powtarzaj pełnych list treningów w `Context` ani `Notatki trenera`. Plan i ocena jednostek mają tam swoje główne, jednoznaczne miejsce.
+Planowane jednostki zapisuj tylko w `Plan tygodnia`; `Ocena jednostek` uzupełniaj dopiero po wykonaniu, modyfikacji, opuszczeniu albo odwołaniu treningu.
+
 Najważniejsze narzędzia:
 
 - `start_training` — onboarding i obsługa profilu startowego;

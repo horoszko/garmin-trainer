@@ -506,8 +506,9 @@ def update_training_diary(
     Aktualizuje jedną sekcję istniejącego dziennika treningowego.
 
     section musi być jedną z sekcji training_diary_v1, np.:
-    Podsumowanie, Profil zawodnika, Poprzedni tydzień, Plan tygodnia,
-    Ocena jednostek, Stan tygodnia, Trend, Notatki trenera.
+    Profil zawodnika, Context, Stan tygodnia, Ustalenia, Podsumowanie,
+    Poprzedni tydzień, Plan tygodnia, Ocena jednostek, Trend,
+    Notatki trenera.
 
     Opcjonalny diary_status może być IN_PROGRESS albo CLOSED.
     Narzędzie aktualizuje też Stan na na bieżącą datę.
