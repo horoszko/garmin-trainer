@@ -4,12 +4,12 @@ Garmin Trainer to osobisty trener AI oparty na danych z Garmin Connect. Łączy 
 
 Projekt działa w Dockerze i jest pomyślany tak, żeby dało się go łatwo uruchomić, przenieść na inny serwer i rozwijać bez wiązania logiki treningowej z jednym interfejsem AI.
 
-UWAGA: Obecny model wdrożenia: jedna instancja Garmin Trainer = jeden użytkownik GarminDB. 
-Obsługa kolejnego użytkownika wymaga uruchomienia osobnej instancji kontenera z oddzielnym data/.
+UWAGA: Obecny model wdrożenia: jedna instancja Garmin Trainer = jeden użytkownik GarminDB.
+Obsługa kolejnego użytkownika wymaga uruchomienia osobnej instancji kontenera z oddzielnym `data/`, lokalną konfiguracją i niekolidującym portem hosta. Nie współdziel danych GarminDB pomiędzy niezależnymi użytkownikami.
 
-UWAGA: Agent celowo nie ma dostępu do wyszukiwarki internetowej. Korzysta wyłącznie z danych GarminDB, Training Diary oraz źródeł wiedzy umieszczonych w data/knowledge/.
+UWAGA: Agent celowo nie ma dostępu do wyszukiwarki internetowej. Korzysta wyłącznie z danych GarminDB, Training Diary oraz źródeł wiedzy umieszczonych w `data/knowledge/`.
 
-UWAGA: "Garmin Trainer" może być również wykorzystywany przez inne agenty i automatyzacje przez API Open WebUI. Rdzeń aplikacji jest napisany w Pythonie i pozostaje niezależny od warstwy interfejsu, więc Open WebUI można w przyszłości zastąpić innym frontendem, frameworkiem agentowym lub własnym adapterem API bez przepisywania głównej logiki aplikacji.
+> **Ostatnia weryfikacja dokumentacji:** 2026-09-24
 
 ## Co potrafi
 
@@ -49,6 +49,20 @@ FIT files Tools → data/generated/ → plik FIT w rozmowie
 ```
 
 GarminDB pozostaje źródłem prawdy o tym, **co rzeczywiście się wydarzyło**. Training Diary przechowuje to, czego nie da się odczytać bezpośrednio z Garmina: plan, znaczenie treningu, decyzje, wykonanie względem planu i dalsze działania.
+
+## API i integracje
+
+Garmin Trainer może być wykorzystywany przez inne agenty i automatyzacje przez API Open WebUI. Obecnym interfejsem integracyjnym są Open WebUI oraz jego Workspace Tools.
+
+Rdzeń aplikacji jest napisany w Pythonie i pozostaje niezależny od warstwy interfejsu, więc może zostać wykorzystany przez inny frontend, framework agentowy lub własny adapter bez przepisywania głównej logiki aplikacji. Osobne API Garmin Trainer i MCP nie są obecnie zaimplementowane.
+
+## Wymagania
+
+- Docker z Docker Compose;
+- konto Garmin Connect;
+- model LLM obsługujący `tool/function calling`;
+- dostęp do zewnętrznego API modelu albo lokalnego providera;
+- wolny port `3000` albo odpowiednia zmiana mapowania portu w konfiguracji.
 
 ## Szybki start
 

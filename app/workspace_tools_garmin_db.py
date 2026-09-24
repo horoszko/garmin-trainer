@@ -7,6 +7,7 @@ version: 0.1.0
 import asyncio
 from concurrent.futures import TimeoutError as FutureTimeoutError
 import sys
+import time
 
 sys.path.insert(0, "/opt/garmin-trainer/app")
 
@@ -294,8 +295,15 @@ class Tools:
         udanej synchronizacji.
         """
         loop = asyncio.get_running_loop()
+        last_status_at = time.monotonic()
+        last_status_description = "Synchronizacja GarminDB"
 
         async def emit_status(description: str, done: bool = False):
+            nonlocal last_status_at, last_status_description
+
+            last_status_at = time.monotonic()
+            last_status_description = description
+
             if not __event_emitter__:
                 return
 
@@ -326,6 +334,11 @@ class Tools:
             )
 
         def progress(message: str):
+            nonlocal last_status_at, last_status_description
+
+            last_status_at = time.monotonic()
+            last_status_description = message
+
             if __event_emitter__:
                 future = asyncio.run_coroutine_threadsafe(
                     __event_emitter__(
@@ -346,12 +359,35 @@ class Tools:
                 except Exception:
                     future.cancel()
 
-        result = await asyncio.to_thread(
-            backend.sync_garmindb,
-            mode,
-            full_sync_after_days,
-            progress,
+        async def emit_heartbeat():
+            while True:
+                await asyncio.sleep(15)
+                if time.monotonic() - last_status_at >= 15:
+                    await emit_status(
+                        "Synchronizacja nadal trwa — "
+                        f"{last_status_description.lower()}"
+                    )
+
+        heartbeat_task = (
+            asyncio.create_task(emit_heartbeat())
+            if __event_emitter__
+            else None
         )
+
+        try:
+            result = await asyncio.to_thread(
+                backend.sync_garmindb,
+                mode,
+                full_sync_after_days,
+                progress,
+            )
+        finally:
+            if heartbeat_task:
+                heartbeat_task.cancel()
+                try:
+                    await heartbeat_task
+                except asyncio.CancelledError:
+                    pass
 
         if result.get("interrupted"):
             final_description = "Synchronizacja GarminDB przerwana."

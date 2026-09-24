@@ -5,6 +5,23 @@
 Garmin Trainer ma być prosty, czytelny, audytowalny i łatwy do wdrożenia oraz
 odtworzenia. Nie buduj infrastruktury „na zapas”.
 
+## Zasada dokumentacji
+
+`AGENTS.md` ma zawierać przede wszystkim informacje wpływające na zachowanie
+Agenta, których nie można szybko i jednoznacznie wywnioskować z kodu.
+
+Stosuj praktyczny **test 10 sekund**: jeżeli Agent może ustalić daną informację
+w kilka–kilkanaście sekund z kodu, konfiguracji lub `README.md`, zwykle nie
+trzeba jej tutaj powtarzać.
+
+Dokumentuj przede wszystkim:
+
+- dlaczego coś zostało zaprojektowane w dany sposób;
+- źródła prawdy;
+- ograniczenia i nietypowe pułapki;
+- zasady bezpieczeństwa;
+- decyzje, których przyszły Agent nie powinien samowolnie zmieniać.
+
 ## Architektura
 
 ```text
@@ -35,32 +52,16 @@ Oficjalne repozytorium projektu:
 https://github.com/horoszko/garmin-trainer
 ```
 
-### Aktualny stan projektu
+### Założenia wdrożenia
 
-- Open WebUI: `v0.11.4`;
-- GarminDB: `3.7.0`;
-- Garmin FIT SDK: `21.214.0`;
-- wdrożenie: jeden kontener Docker;
-- jedna instancja: jeden użytkownik GarminDB;
-- bootstrap: oficjalne API Open WebUI;
-- stan Open WebUI: trwały wolumen `openwebui-data`;
-- dane Garmin Trainer: bind mounty w `data/`.
+- jedna instancja Garmin Trainer obsługuje jednego użytkownika GarminDB;
+- obsługa kolejnego użytkownika wymaga osobnej instancji z oddzielnym katalogiem `data/`;
+- bootstrap korzysta z oficjalnego API Open WebUI;
+- stan Open WebUI jest trwały i przechowywany w wolumenie `openwebui-data`;
+- dane Garmin Trainer są przechowywane w jawnych bind mountach w `data/`.
 
-Za zakończone i działające obszary należy obecnie uznawać:
-
-- niezależne GarminDB Tools, Training Diary Tools i FIT Tools;
-- natywne załączanie plików `.fit`;
-- natywne załączanie, podgląd i pobieranie Markdown Diary;
-- konwersacyjny onboarding `/start`;
-- `/sync`, `/sync full` i `/sync stop`;
-- zatrzymywanie synchronizacji przez grupę procesu;
-- trwałość provider connections, historii rozmów i ustawień Open WebUI;
-- wzorzec `docs/training_diary/2000-W00_training_diary.md`;
-- przypięte wersje bezpośrednich zależności.
-
-Jedna instancja Garmin Trainer obsługuje obecnie jednego użytkownika GarminDB.
-Obsługa kolejnego użytkownika wymaga osobnej instancji kontenera z oddzielnym
-katalogiem `data/`.
+Aktualne wersje zależności i stan funkcji sprawdzaj w `README.md`, plikach
+konfiguracyjnych i faktycznym kodzie zamiast utrzymywać ich kopię w `AGENTS.md`.
 
 ### Core i adaptery
 
@@ -123,59 +124,15 @@ Do repozytorium nie wolno commitować:
 
 ### Świeża instalacja
 
-Minimalny scenariusz odtworzenia projektu:
+Procedura instalacji znajduje się w `README.md`.
 
-```bash
-git clone https://github.com/horoszko/garmin-trainer
-cd garmin-trainer
+Przy instalacji:
 
-cp .env.example .env
-cp data/garmindb/GarminConnectConfig.json.example \
-  data/garmindb/GarminConnectConfig.json
-chmod 600 data/garmindb/GarminConnectConfig.json
-
-docker compose up -d --build
-```
-
-Przed uruchomieniem uzupełnij w `.env`:
-
-- `WEBUI_ADMIN_EMAIL`;
-- `WEBUI_ADMIN_PASSWORD`;
-- `WEBUI_ADMIN_NAME`.
-
-Uzupełnij również dane Garmin Connect w:
-
-```text
-data/garmindb/GarminConnectConfig.json
-```
-
-Ten plik zawiera sekrety i nigdy nie może trafić do repozytorium. Commitowany
-jest wyłącznie `data/garmindb/GarminConnectConfig.json.example`.
-
-GarminDB korzysta z katalogu `data/garmindb/`. Nie twórz ani nie używaj
-`data/garmindb/garmin_data/` jako katalogu konfiguracyjnego projektu.
-
-`data/garmindb/` jest trwałym katalogiem danych użytkownika na hoście. W
-kontenerze jest montowany jako `/data/garmindb`, a zmienna `HOME` procesu
-GarminDB musi wskazywać `/data/garmindb`. GarminDB tworzy wtedy dane pod:
-
-```text
-/data/garmindb/HealthData/
-```
-
-Na hoście odpowiada to:
-
-```text
-/opt/garmin-trainer/data/garmindb/HealthData/
-```
-
-Oczekiwane bazy to `HealthData/DBs/garmin.db` oraz
-`HealthData/DBs/garmin_activities.db`. Nie kieruj GarminDB do `/root/HealthData`
-ani do `data/garmindb/garmin_data/`. Cały katalog `data/garmindb/` powinien być
-łatwy do ręcznego backupu i przeniesienia razem z projektem.
-
-Po uruchomieniu Open WebUI jest dostępne pod portem `3000`. Bootstrap musi
-zakończyć się sukcesem; w przeciwnym razie entrypoint zatrzymuje kontener.
+- korzystaj z commitowanych plików `.example`;
+- pytaj użytkownika tylko o brakujące sekrety i prywatne dane;
+- nie commituj lokalnej konfiguracji zawierającej dane logowania;
+- zachowaj trwałość `data/garmindb/` i wolumenu Open WebUI;
+- po wdrożeniu wykonaj walidację opisaną poniżej.
 
 ### Zasoby zarządzane przez bootstrap
 
@@ -248,10 +205,15 @@ curl http://localhost:3000/health
 curl http://localhost:3000/api/version
 ```
 
-Należy potwierdzić status `healthy`, poprawne zakończenie bootstrapu, wersję
-Open WebUI `v0.11.4`, obecność Tools i Custom Models oraz działające provider
-connection. Minimalny test funkcjonalny obejmuje `/start`, `/sync`, odczyt Diary,
-generowanie FIT oraz `/sync full` → `/sync stop`.
+Należy potwierdzić status `healthy`, poprawne zakończenie bootstrapu, zgodność
+wersji Open WebUI z projektem, obecność Tools i Custom Models oraz działające
+provider connection. Minimalny test funkcjonalny obejmuje `/start`, zwykłe
+`/sync`, odczyt Diary i generowanie FIT.
+
+`/sync full` i `/sync stop` testuj tylko przy zmianach dotyczących pełnej
+synchronizacji lub mechanizmu zatrzymywania. Pełny sync może trwać wiele godzin,
+wykonać dużą liczbę zapytań do Garmin Connect i doprowadzić do błędów `503` lub
+rate limiting. Nie uruchamiaj go jako zwykłego testu wdrożenia.
 
 ### Rozpoczęcie pracy przez kolejnego agenta
 
@@ -286,48 +248,23 @@ Kod ma być łatwy do audytu przez człowieka w VS Code:
 - używaj krótkich docstringów tam, gdzie funkcja nie jest oczywista;
 - unikaj skompresowanych one-linerów i zbędnych warstw pośrednich;
 - komentarze mają wyjaśniać „dlaczego”, a nie przepisywać kod;
-- konfiguracje JSON formatuj i utrzymuj w postaci edytowalnej dla człowieka.
+- konfiguracje JSON formatuj i utrzymuj w postaci edytowalnej dla człowieka;
+- nazwy plików konfiguracyjnych utrzymuj jako samoopisujące i czytelne po sklonowaniu projektu.
 
-## Struktura projektu
+## Zarządzanie zasobami AI
 
-```text
-config/
-├── custom_models/
-└── tools/
+Używaj najmniejszego modelu, poziomu reasoning, liczby subagentów i ilości
+kontekstu wystarczających do niezawodnego wykonania zadania.
 
-data/
-├── garmindb/
-├── training_diary/
-├── generated/
-└── knowledge/
-```
+- Proste edycje i operacje mechaniczne wykonuj lekkimi zasobami.
+- Mocniejsze modele wykorzystuj do architektury, trudnej analizy i niejednoznacznych problemów.
+- Po rozwiązaniu trudnego problemu wracaj do tańszych zasobów przy prostych czynnościach.
+- Używaj subagentów tylko wtedy, gdy zadania są faktycznie niezależne lub równoległe.
+- Nie uruchamiaj browser testu, jeśli zmianę można wiarygodnie sprawdzić testem, API lub logami.
+- Nie analizuj całej bazy, repozytorium ani wszystkich logów, jeśli zadanie wymaga tylko ich fragmentu.
+- Nie przywiązuj tej polityki do nazw modeli konkretnego dostawcy.
 
-- `config/custom_models/` zawiera konfiguracje custom modeli i person.
-- `config/tools/` zawiera konfiguracje Workspace Tools.
-- `data/garmindb/` zawiera dane GarminDB.
-- `data/training_diary/` zawiera dziennik treningowy w Markdown.
-- `data/generated/` zawiera wygenerowane pliki FIT.
-- `data/knowledge/` zawiera przenośne źródła wiedzy.
-
-Nazwy plików konfiguracyjnych mają być samoopisujące. Użytkownik powinien móc
-je bezpiecznie odczytać i ręcznie edytować po sklonowaniu projektu.
-
-## Główne zależności
-
-Projekt opiera się na następujących bezpośrednich komponentach:
-
-- [Open WebUI](https://github.com/open-webui/open-webui);
-- [GarminDB](https://github.com/elbart/garmindb);
-- [Garmin FIT Python SDK](https://github.com/garmin/fit-python-sdk).
-
-Aktualnie używana i przetestowana wersja Open WebUI: `v0.11.4`.
-Przypięte wersje bezpośrednich pakietów Python:
-
-- `GarminDb==3.7.0`;
-- `garmin-fit-sdk==21.214.0`.
-
-Nie dokumentuj tutaj pełnego drzewa zależności tranzytywnych instalowanych
-przez `pip`.
+Optymalizuj koszt całego poprawnie wykonanego zadania, nie pojedynczego wywołania.
 
 ## Standard Knowledge
 
@@ -451,6 +388,19 @@ Tryb `auto` ma oznaczać `latest`. Pełna synchronizacja jest dozwolona tylko po
 wyraźnym żądaniu użytkownika i nie może być uruchamiana automatycznie ani
 wykonywana wyłącznie w celu przetestowania kodu.
 
+Adapter Open WebUI synchronizacji GarminDB powinien emitować czytelne statusy
+dla trybów `latest` i `full`, w tym postęp pobierania oraz importowania
+aktywności, dni i plików. Statusy GUI nie mogą wpływać na działanie
+synchronizacji ani przerywać jej przy błędzie emisji komunikatu. Powtarzające
+się statusy powinny być ograniczane.
+
+W aktualnej wersji Open WebUI GUI może długo wyświetlać `0%` dla podetapu,
+który przetwarza pojedynczy plik, mimo że GarminDB nadal pracuje. Stosujemy
+obejście w adapterze Open WebUI: dla takiego etapu pokazujemy komunikat o
+trwającym przetwarzaniu pliku, a po braku nowego statusu emitujemy okresowy
+heartbeat. Jest to obejście prezentacji statusu w obecnej wersji Open WebUI,
+a nie zmiana logiki synchronizacji GarminDB.
+
 ## Workflow zmian
 
 Pracuj etapami:
@@ -475,8 +425,3 @@ zmodyfikowanych plików. Przy zmianach Dockera sprawdź konfigurację Compose. P
 zmianach bootstrapu sprawdź zachowanie oficjalnego API Open WebUI i idempotencję.
 
 Nie uruchamiaj pełnej synchronizacji GarminDB jako testu.
-
-# Możliwe kierunki rozwoju
-
-- obsługa wielu użytkowników i niezależnych profili GarminDB w jednej instancji aplikacji;
-- zweryfikowanie działania z innymi dyscyplinami sportowymi.

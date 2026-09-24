@@ -2201,13 +2201,33 @@ def sync_garmindb(
     stage_messages = {
         "___Downloading All Data___":
             "Pobieranie danych z Garmin Connect",
+        "___Downloading Latest Data___":
+            "Pobieranie danych z Garmin Connect",
 
         "___Importing All Data___":
+            "Importowanie danych do GarminDB",
+        "___Importing Latest Data___":
             "Importowanie danych do GarminDB",
 
         "___Analyzing Data___":
             "Analizowanie danych GarminDB",
     }
+
+    progress_pattern = re.compile(
+        r"^\s*(\d{1,3})%.*?\|\s*(\d+)/(\d+).*?"
+        r"\b(activities|days|weeks|months|files)/s\b"
+    )
+    progress_labels = {
+        "activities": "aktywności",
+        "days": "dni",
+        "weeks": "tygodni",
+        "months": "miesięcy",
+        "files": "plików",
+    }
+    current_stage = "Uruchamianie GarminDB"
+    last_progress_at = 0.0
+    last_progress_message = ""
+    seen_progress_messages = set()
 
     tail = []
 
@@ -2278,9 +2298,39 @@ def sync_garmindb(
 
                 for marker, message in stage_messages.items():
                     if marker in line:
+                        current_stage = message
                         if progress_callback:
                             progress_callback(message)
                         break
+
+                progress_match = progress_pattern.search(line)
+                if progress_callback and progress_match:
+                    percent, completed, total, unit = progress_match.groups()
+                    if unit == "files" and completed == "0" and total == "1":
+                        progress_message = (
+                            f"{current_stage}: trwa przetwarzanie pliku"
+                        )
+                    else:
+                        progress_message = (
+                            f"{current_stage}: "
+                            f"{progress_labels[unit]} {completed}/{total} "
+                            f"({percent}%)"
+                        )
+                    now = time.monotonic()
+                    is_finished = percent == "100"
+
+                    if (
+                        progress_message not in seen_progress_messages
+                        and progress_message != last_progress_message
+                        and (
+                            is_finished
+                            or now - last_progress_at >= 2.0
+                        )
+                    ):
+                        progress_callback(progress_message)
+                        last_progress_at = now
+                        last_progress_message = progress_message
+                        seen_progress_messages.add(progress_message)
 
             returncode = process.wait()
         finally:
