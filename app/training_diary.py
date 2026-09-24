@@ -413,6 +413,10 @@ def create_training_diary(week: str, content: str) -> dict:
       type: INITIAL_PROFILE
       ---
 
+    Dla tygodni YYYY-W01–YYYY-W53 frontmatter musi zawierać status:
+    CLOSED, IN_PROGRESS albo PLANNED. Pole `Status:` w treści dokumentu
+    nie zastępuje pola `status:` w frontmatter.
+
     Wartość week w treści musi być identyczna z argumentem week. Nie zgaduj
     brakujących danych — pozostaw je jako null. Obecny walidator wymaga pól
     week i schema; type: INITIAL_PROFILE opisuje właściwy profil W00.

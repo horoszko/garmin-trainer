@@ -95,6 +95,10 @@ class Tools:
         ---
 
         Wartość week w treści musi być identyczna z argumentem week.
+
+        Dla tygodni YYYY-W01–YYYY-W53 dodaj do frontmatter status:
+        CLOSED, IN_PROGRESS albo PLANNED. Pole `Status:` w treści dokumentu
+        nie zastępuje pola `status:` w frontmatter.
         """
         result = await asyncio.to_thread(
             backend.create_training_diary,
